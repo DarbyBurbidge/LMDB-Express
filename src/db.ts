@@ -27,8 +27,14 @@ db.open({
   maxDbs: 2
 });
 
-export const db1 = db.openDbi({
+export const block_db = db.openDbi({
   name: "blockchain baby!!!",
-  create: true
+  create: true,
+  dupSort: true
+})
+
+export const txn_db = db.openDbi({
+    name: "txn_db",
+    create: true
 })
 
