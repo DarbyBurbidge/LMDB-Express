@@ -17,6 +17,6 @@ the server then starts listening on port 5000
 
 You can then use the endpoint:
 http://localhost:5000/data/:blockId
-The endpoint will console log the current blockId stored in the database.
-It will then fetch the block for the given blockId,
-and return a list of the transactions in the block in the response.
+The endpoint will check if there's data for blockId in the database and return it.
+If there isn't existing data, it will check the blockchain itself, add it to the database,
+and then return the new database values.

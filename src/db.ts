@@ -28,7 +28,7 @@ db.open({
 });
 
 export const block_db = db.openDbi({
-  name: "blockchain baby!!!",
+  name: "block_db",
   create: true,
   dupSort: true
 })
