@@ -54,7 +54,7 @@ You can request the balance at a given block in the chain
 ### Known Issues
 Block endpoint gives error if there's missing data because it refreshes all the data (even existing data). This is caused because dupKeys are allowed so we can store many transactions under the same 'txns' key. 'dupKeys: true' stops overwrites, but 'noOverwrites: false' doesn't fix it.
 
-#### Possible fix: change 'txns' key to 'txn-i' and remove dupKeys since the default database config allows overwrites. Also, deleting and then adding keys is another possible solution (but seems less efficient).
+**Possible fix**: change 'txns' key to 'txn-i' and remove dupKeys since the default database config allows overwrites. Also, deleting and then adding keys is another possible solution (but seems less efficient).
 
 
 
