@@ -4,47 +4,52 @@ import { db, block_db } from "../db";
 import { eth } from "../eth";
 import { Cursor } from "node-lmdb";
 
-// handle get requests across '/data/:blockId' endpoint
-export const getTxnsByBlock = async (req: Request, res: Response) => {
+// handle get requests across '/data/:blockNum' endpoint
+export const getBlock = async (req: Request, res: Response) => {
     // set keys for block data
-    const blockId = req.params.blockId
+    const blockNum = req.params.blockNum
     const keys = {
-        createdAt: `${blockId}-createdAt`,
-        miner: `${blockId}-miner`,
-        gasUsed: `${blockId}-gasUsed`,
-        gasLimit: `${blockId}-gasLimit`,
-        data: `${blockId}-data`,
-        txns: `${blockId}-txns`
+        hash: `${blockNum}-hash`,
+        createdAt: `${blockNum}-createdAt`,
+        miner: `${blockNum}-miner`,
+        gasUsed: `${blockNum}-gasUsed`,
+        gasLimit: `${blockNum}-gasLimit`,
+        data: `${blockNum}-data`,
+        txns: `${blockNum}-txns`
     }
         
     const txn = db.beginTxn()
     // create a cursor for scanning over duplicate keys
     const cursor = new Cursor(txn, block_db);
     try {
-        // Check if key is in database
+        // Check if keys are in database
         if (Object.keys(keys).some((key) => {
             console.log(key)
             if (key.includes('gas')) {
-                return txn.getNumber(block_db, key) ? false : true
+                return txn.getNumber(block_db, `${blockNum}-${key}`) ? false : true
             }
-            return (txn.getString(block_db, key) ? false : true)
+            return (txn.getString(block_db, `${blockNum}-${key}`) ? false : true)
         })) {
             // Gets a block from sepolia testnet
-            const block = await eth.getBlock(blockId);
+            const block = await eth.getBlock(blockNum);
+            txn.putString(block_db, keys.hash, block.hash, { noDupData: true })
             txn.putString(block_db, keys.createdAt, String(block.timestamp), { noDupData: true })
             txn.putString(block_db, keys.miner, block.miner, { noDupData: true })
             txn.putNumber(block_db, keys.gasUsed, block.gasUsed, { noDupData: true })
             txn.putNumber(block_db, keys.gasLimit, block.gasLimit, { noDupData: true })
             txn.putString(block_db, keys.data, block.extraData, { noDupData: true })
-            // Logs each transaction into the database with key blockId
+            // Logs each transaction into the database with key blockNum
+            if (txn.getString(block_db, keys.txns)) {
+                txn.del(block_db, keys.txns)
+            }
             block.transactions.forEach((transaction) => {
                 txn.putString(block_db, keys.txns, transaction)
-                console.log(`Transaction ID Added: ${transaction}`)
             })
-
+            console.log(`Block Added: ${blockNum}`)
         }            
         // Returns the transactions from the database to the front end
         res.send({
+            hash: txn.getString(block_db, keys.hash),
             createdAt: txn.getString(block_db, keys.createdAt),
             miner: txn.getString(block_db, keys.miner),
             gasUsed: txn.getNumber(block_db, keys.gasUsed),
@@ -53,7 +58,6 @@ export const getTxnsByBlock = async (req: Request, res: Response) => {
             txns: getDupValuesByKeyString(keys.txns, cursor)
         })
         txn.commit();
-        console.log("success" )
     } catch (err) {
         // If anything bad happens, kill the transaction and log what happened
         txn.abort()
@@ -68,7 +72,6 @@ const getDupValuesByKeyString = (key: string, cursor: Cursor) => {
         var i = 0;
         do {
             txnIds[i] = cursor.getCurrentString()
-            console.log(txnIds[i])
             i++
         } while (cursor.goToNextDup())
     }

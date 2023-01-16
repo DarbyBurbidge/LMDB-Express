@@ -2,11 +2,11 @@
 # Minimal LMDB + Express setup
 
 To start, clone the repo and in the root folder run:
-```
+```typescript
 yarn install
 ```
 and then:
-```
+```typescript
 yarn run start
 ```
 
@@ -16,7 +16,36 @@ It also initiates a connection to the ethereum testnet Sepolia for gathering dat
 the server then starts listening on port 5000
 
 You can then use the endpoint:
-http://localhost:5000/data/:blockId
-The endpoint will check if there's data for blockId in the database and return it.
+### http://localhost:5000/block/:blockNum
+The endpoint will check if there's data for blockNum in the database and return it.
 If there isn't existing data, it will check the blockchain itself, add it to the database,
 and then return the new database values.
+
+Block data includes:
+    hash: hash of the block,
+    createdAt: timestamp of the block,
+    miner: account that mined the block,
+    gasUsed: total gas used by transactions in the block,
+    gasLimit: maximum gas allowed in the block,
+    data: any extra data the block contains,
+    txns: list of all transactions in the block
+
+You can also use the endpoint:
+### http://localhost:5000/txn/:txnId
+The endpoint will check if there's data for the txnId, it works just like blockId except the data is for a particular transaction:
+
+Txn data includes:
+    sender: sender's account,
+    receiver: receiver's account,
+    amt: the amount (in Wei) transferred,
+    gas: the amount of gas the sender sent for this transaction,
+    block: the block containing the transaction,
+    note: additional data sent with the transaction
+
+You can also use:
+### https://localhost:5000/balance/:accountId
+The endpoint sends a direct request to the blockchain to get the most current balance data.
+
+If you add a blockNum query:
+### https://localhost:5000/balance/:accountId?blockNum=
+You can request the balance at a given block in the chain
