@@ -22,12 +22,12 @@ If there isn't existing data, it will check the blockchain itself, add it to the
 and then return the new database values.
 
 Block data includes:
-    hash: hash of the block,
-    createdAt: timestamp of the block,
-    miner: account that mined the block,
-    gasUsed: total gas used by transactions in the block,
-    gasLimit: maximum gas allowed in the block,
-    data: any extra data the block contains,
+    hash: hash of the block,  
+    createdAt: timestamp of the block,  
+    miner: account that mined the block,  
+    gasUsed: total gas used by transactions in the block,  
+    gasLimit: maximum gas allowed in the block,  
+    data: any extra data the block contains,  
     txns: list of all transactions in the block
 
 You can also use the endpoint:
@@ -35,11 +35,11 @@ You can also use the endpoint:
 The endpoint will check if there's data for the txnId, it works just like blockId except the data is for a particular transaction:
 
 Txn data includes:
-    sender: sender's account,
-    receiver: receiver's account,
-    amt: the amount (in Wei) transferred,
-    gas: the amount of gas the sender sent for this transaction,
-    block: the block containing the transaction,
+    sender: sender's account,  
+    receiver: receiver's account,  
+    amt: the amount (in Wei) transferred,  
+    gas: the amount of gas the sender sent for this transaction,  
+    block: the block containing the transaction,  
     note: additional data sent with the transaction
 
 You can also use:
