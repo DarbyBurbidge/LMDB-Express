@@ -21,7 +21,7 @@ The endpoint will check if there's data for blockNum in the database and return 
 If there isn't existing data, it will check the blockchain itself, add it to the database,
 and then return the new database values.
 
-Block data includes:
+Block data includes:  
     **hash**: hash of the block,  
     **createdAt**: timestamp of the block,  
     **miner**: account that mined the block,  
@@ -34,7 +34,7 @@ You can also use the endpoint:
 #### http://localhost:5000/txn/:txnId
 The endpoint will check if there's data for the txnId, it works just like blockId except the data is for a particular transaction:
 
-Txn data includes:
+Txn data includes:  
     **sender**: sender's account,  
     **receiver**: receiver's account,  
     **amt**: the amount (in Wei) transferred,  
