@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { db, txn_db } from "../db";
 import { eth } from "../eth";
 import { Txn } from "node-lmdb";
+import Web3 from "web3";
 
 export const getTxn = async (req: Request, res: Response) => {
     const txnId = req.params.txnId
@@ -51,7 +52,7 @@ const getDetailsByTxnId = (txnId: string, txn: Txn) => {
         sender: txn.getString(txn_db, `${txnId}-sender`),
         receiver: txn.getString(txn_db, `${txnId}-receiver`),
         amount: txn.getString(txn_db, `${txnId}-amt`),
-        gas: txn.getNumber(txn_db, `${txnId}-gas`),
+        gas: Web3.utils.fromWei(txn.getString(txn_db, `${txnId}-gas`), 'Gwei'),
         block: txn.getString(txn_db, `${txnId}-block`),
         note: txn.getString(txn_db, `${txnId}-note`)
     }
