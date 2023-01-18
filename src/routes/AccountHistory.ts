@@ -30,7 +30,9 @@ export const getAccountHistory = async (req: Request, res: Response) => {
     }*/
 
     const txns = await scanBlockRange(account, startBlockNum, endBlockNum, 200)
-
+    // txns.forEach((txn) => {
+    //     if (txn) addTxnToAccount(txn, account)
+    // })
 
     res.send(txns)
 }
@@ -75,7 +77,7 @@ const scanBlockRange = async (account: string, start: number, end: number, maxTh
     }
 
     if (start > end) {
-        return -1
+        return []
     }
 
     let blockNumber = start,

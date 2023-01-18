@@ -30,7 +30,6 @@ db.open({
 export const block_db = db.openDbi({
   name: "block_db",
   create: true,
-  dupSort: true
 })
 
 export const txn_db = db.openDbi({
