@@ -4,7 +4,7 @@ import { Block, Transaction } from "web3-eth"
 import Web3 from "web3"
 // import { db } from "../db"
 
-export const getTxnsByAccount = async (req: Request, res: Response) => {
+export const getAccountHistory = async (req: Request, res: Response) => {
     const account = req.params.accountId
     const { startBlock, endBlock } = req.query
     console.log(req.query)

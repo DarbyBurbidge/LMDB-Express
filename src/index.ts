@@ -2,7 +2,7 @@ import express from 'express';
 import { getBlock } from './routes/Block';
 import { getTxn } from './routes/Txn';
 import { getBalance } from './routes/Balance';
-import { getTxnsByAccount } from './lmdb/getTxnsByAccount';
+import { getAccountHistory } from './routes/AccountHistory';
 
 const PORT = 5000;
 const app = express();
@@ -16,7 +16,7 @@ app.get('/txn/:txnId', async (req, res) => {
 })
 
 app.get('/account-history/:accountId', async (req, res) => {
-  getTxnsByAccount(req, res)
+  getAccountHistory(req, res)
 })
 
 app.get('/balance/:accountId', async (req, res) => {
