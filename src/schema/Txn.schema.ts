@@ -4,5 +4,6 @@ export interface ITxn {
     amount: string,
     gas: string,
     block: string,
+    blockHash: string,
     note: string
 }

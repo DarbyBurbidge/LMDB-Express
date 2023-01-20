@@ -1,4 +1,5 @@
 export interface IBlock {
+    number: number,
     hash: string,
     createdAt: string,
     miner: string,

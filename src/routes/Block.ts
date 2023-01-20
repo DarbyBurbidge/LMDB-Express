@@ -13,7 +13,7 @@ export const getBlock = async (req: Request, res: Response) => {
     // Check if keys are in database
     if (!checkKey(blockNum, block_db)) {
         // Gets a block from sepolia testnet
-        const block = await eth.getBlock(blockNum);
+        const block = await eth.getBlock(blockNum, true);
         addBlockToDB(block)
     }
     // Returns the transactions from the database to the front end

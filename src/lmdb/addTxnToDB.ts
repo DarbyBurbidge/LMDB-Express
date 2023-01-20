@@ -5,11 +5,13 @@ export const addTxnToDB = (txn: Transaction) => {
     const db_txn = db.beginTxn()
     try {
         const stringified_txn = JSON.stringify({
+            hash: txn.hash,
             sender: txn.from,
             receiver: txn.to,
             amount: txn.value,
             gas: txn.gasPrice,
             block: txn.blockNumber,
+            blockHash: txn.blockHash,
             note: txn.input
         })
         db_txn.putString(txn_db, txn.hash, stringified_txn)

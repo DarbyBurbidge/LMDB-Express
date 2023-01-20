@@ -15,7 +15,7 @@ app.get('/txn/:txnId', async (req, res) => {
   getTxn(req, res)
 })
 
-app.get('/account-history/:accountId', async (req, res) => {
+app.get('/account-history/', async (req, res) => {
   getAccountHistory(req, res)
 })
 
