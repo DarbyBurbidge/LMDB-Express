@@ -12,7 +12,6 @@ export const addTxnToDB = (txn: Transaction) => {
             block: txn.blockNumber,
             note: txn.input
         })
-        console.log(stringified_txn)
         db_txn.putString(txn_db, txn.hash, stringified_txn)
         console.log(`Txn Added: ${txn.hash}`)
         db_txn.commit()

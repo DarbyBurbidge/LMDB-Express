@@ -52,17 +52,25 @@ You can request the balance at a given block in the chain
 
 To get a list of Transactions (just the hash/ID for now) for an account
 ### https://localhost:/5000/account-history/:accountId?startBlock=&endBlock=
-**Note**: This can take a significant amount of time as it still queries the blockchain directly. Scaling is unclear, 100 blocks takes < 2s, while 500 blocks can take 10s, and 10000 blocks taking ~170s.  
-It scans blocks and returns transactions where the account is inside the 'to' or 'from' id.
-
-### Known Issues
-Block endpoint gives error if there's missing data because it refreshes all the data (even existing data). This is caused because dupKeys are allowed so we can store many transactions under the same 'txns' key. 'dupKeys: true' stops overwrites, but 'noOverwrites: false' doesn't fix it.
-
-**Possible fix**: change 'txns' key to 'txn-i' and remove dupKeys since the default database config allows overwrites. Also, deleting and then adding keys is another possible solution (but seems less efficient).
+Got time under 2s for 1000 blocks, although adding to DB added new time.
+If the range of blocks has already been saved to the account, then it retreives them and returns them. Otherwise it scans the blockchain. It scans blocks at a given number at a time and returns transactions where the account is inside the 'to' or 'from' id.
 
 ### TODO
-Account History takes forever. The plan is to add this data to the database after fetching, hopefully it will reveal just how fast lmdb can be.
+Account History - Txns aren't saved in a sorted order, meaning if you fetch earlier blocks after older ones, they show up in reverse order:
+56781234
 
-**Possible Fix** Right now account-history takes a start and end block. It might be beneficial to only load 100-200 blocks at a time, paging through them. Although what I imagine most customers would prefer is looking at N transactions at a time, not N blocks. Once transactions have been loaded in to the database, this should be less of an issue.
 
-
+**Possible Fix** 
+Right now only the hashes are saved in the account DB, either I can fetch all the transactions from the db and then sort them, or I can save additional information on the account side:
+```json
+{
+    "txn": "0x230947029738502750"
+}
+```
+```json 
+{
+    "txn": "0x230947029738502750",
+    "blockNum": "678231"
+}
+```
+I'm inclined to save memory in the DB and instead just fetch them all (the whole Txn) and then sort them (by blockNum) and return the hashes in a sorted list. Although I imagine it is slower.

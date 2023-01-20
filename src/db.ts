@@ -24,7 +24,7 @@ if (!fs.existsSync(db_path)) {
 db.open({
   path: db_path,
   mapSize: 2*1024*1024*1024,
-  maxDbs: 2
+  maxDbs: 3
 });
 
 export const block_db = db.openDbi({
@@ -34,6 +34,11 @@ export const block_db = db.openDbi({
 
 export const txn_db = db.openDbi({
     name: "txn_db",
+    create: true
+})
+
+export const account_db = db.openDbi({
+    name: "account_db",
     create: true
 })
 
