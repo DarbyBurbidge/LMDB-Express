@@ -4,7 +4,7 @@ import { block_db } from "../db";
 import { eth } from "../eth";
 import { getBlockFromDB } from "../lmdb/getBlockFromDB";
 import { checkKey } from "../lmdb/checkKey";
-import { addBlockToDB } from "../lmdb/addBlocktoDB";
+import { addBlockToDB } from "../lmdb/addBlockToDB";
 
 // handle get requests across '/data/:blockNum' endpoint
 export const getBlock = async (req: Request, res: Response) => {
@@ -15,7 +15,7 @@ export const getBlock = async (req: Request, res: Response) => {
         // Gets a block from sepolia testnet
         const block = await eth.getBlock(blockNum);
         addBlockToDB(block)
-    }   
+    }
     // Returns the transactions from the database to the front end
     res.send(getBlockFromDB(blockNum))
 }

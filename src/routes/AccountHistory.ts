@@ -1,33 +1,13 @@
 import { Request, Response } from "express"
 import { eth } from "../eth"
 import { Block, Transaction } from "web3-eth"
-import Web3 from "web3"
 // import { db } from "../db"
 
 export const getAccountHistory = async (req: Request, res: Response) => {
     const account = req.params.accountId
     const { startBlock, endBlock } = req.query
-    console.log(req.query)
-    //const txns: string[] = []
-    //const txn = db.beginTxn()
-    console.log(startBlock, endBlock)
     const endBlockNum = endBlock ? Number(endBlock) : await eth.getBlockNumber()
     const startBlockNum = startBlock ? Number(startBlock) : endBlockNum - 1000
-    /*for (let i = startBlockNum; i <= endBlockNum; i++) {
-        console.log(startBlockNum, endBlockNum)
-        if (i % 1000 == 0) {
-            console.log(`Searching block ${i}`)
-        }
-        const block = await eth.getBlock(i, true);
-        if (block != null && block.transactions != null) {
-            block.transactions.forEach((txn) => {
-                if (account == txn.from || account == txn.to) {
-                    txns.push(txn.hash)
-                    console.log(txn.hash)
-                }
-            })
-        }
-    }*/
 
     const txns = await scanBlockRange(account, startBlockNum, endBlockNum, 200)
     // txns.forEach((txn) => {
@@ -36,32 +16,22 @@ export const getAccountHistory = async (req: Request, res: Response) => {
 
     res.send(txns)
 }
+// Most of the design for the next section comes from:
+// https://gist.github.com/ross-p/bd5d4258ac23319f363dc75c2b722dd9
+// With changes coming from a need to return a list of the txns
+// rather than print them.
 
 const scanTransactionCallback = (account: string, txn: Transaction, block: Block) => {
-
-//    console.log(JSON.stringify(block, null, 4));
-//    console.log(JSON.stringify(txn, null, 4));
-
-    if (txn.to === account) {
-
-        // A transaction credited ether into this wallet
-        var ether = Web3.utils.fromWei(txn.value, 'ether');
-        console.log(`\r${block.number} +${ether} from ${txn.from}`);
-        return txn.hash
-
-    } else if (txn.from === account) {
-
-        // A transaction debitted ether from this wallet
-        var ether = Web3.utils.fromWei(txn.value, 'ether');
-        console.log(`\r${block.number} -${ether} to ${txn.to}`);
-        return txn.hash
-    } else {
+    if (txn.to !== account && txn.from !== account) {
         return undefined
     }
+    console.log(`Transaction Found: ${txn.hash} in block ${block.number}`);
+    return txn.hash
 }
 
 const scanBlockCallback = (account: string, block: Block) => {
     const txns: (string | undefined)[] = []
+    console.log("scanning block")
     if (block.transactions) {
         for (var i = 0; i < block.transactions.length; i++) {
             var txn = block.transactions[i] as Transaction;
@@ -81,62 +51,60 @@ const scanBlockRange = async (account: string, start: number, end: number, maxTh
     }
 
     let blockNumber = start,
-        gotError = false,
-        numThreads = 0
+        gotError = false
 
     const exitThread = () => {
-        numThreads--
         if (callback) {
             callback(gotError, end)
         }
-        return numThreads
     }
 
     const asyncScanNextBlock = async (account: string) => {
-
-        // If we've encountered an error, stop scanning blocks
-        if (gotError) {
-            exitThread();
-        }
-
         // If we've reached the end, don't scan more blocks
         if (blockNumber > end) {
             exitThread();
         }
-
         // Scan the next block and assign a callback to scan even more
         // once that is done.
         var myBlockNumber = blockNumber++;
-
         // Write periodic status update so we can tell something is happening
         if (myBlockNumber % maxThreads == 0 || myBlockNumber == end) {
-            process.stdout.write(`\rScanning block ${myBlockNumber}`);
+            console.log(`Scanning block ${myBlockNumber}`);
         }
-
         // Async call to getBlock() means we can run more than 1 thread
         // at a time, which is MUCH faster for scanning.
         try {
-            const block = await eth.getBlock(myBlockNumber, true,)
-            const txns: (string | undefined)[] = scanBlockCallback(account, block);
+            const block = await eth.getBlock(myBlockNumber, true)
+            const txns = scanBlockCallback(account, block);
             return txns
         } catch (err) {
             // Error retrieving this block
             gotError = true;
+            console.error(err)
+            exitThread();
             return []
         }
     }
     
+    // Create a list of Promises, with each Promise being the return value
+    // of asyncScanNextBlock (a list of string/undefineds)
     const pending: Promise<(string | undefined)[]>[] = []
-    do {
-        for (let nt = 0; nt < maxThreads && start + nt <= end; nt++) {
-            numThreads++;
-            pending.push(asyncScanNextBlock(account))
+    const txns: (string | undefined)[][] = []
+    while (blockNumber < end) {
+        // As long as we haven't reached the end block,
+        // If numThreads < maxThreads, spawn a new request
+        if (pending.length < maxThreads && !gotError) {    
+            const active = asyncScanNextBlock(account)
+            pending.push(active)
         }
-        console.log(numThreads)
-    } while (blockNumber < end)
-    const txns = await Promise.all(pending)
+        if (pending.length >= maxThreads) {
+            txns.push((await Promise.all(pending)).flat())
+            pending.splice(0, maxThreads)
+        }
+    }
+    // Filter out all undefined txns
     return txns.flat().filter((element) => {
         if (element) return true
         return false
-    }); // number of threads spawned (they'll continue processing)
+    });
 }
