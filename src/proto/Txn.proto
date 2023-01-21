@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package ethereum;
+
+message ITxn {
+  string hash = 1;
+  string sender = 2;
+  string receiver = 3;
+  string amount = 4;
+  string gas = 5;
+  uint64 block = 6;
+  string blockHash = 7;
+  string note = 8;
+};

@@ -1,20 +1,21 @@
 import { Transaction } from "web3-eth";
 import { db, txn_db } from "../db";
+import { ITxn } from "../models/src/proto/Txn";
 
 export const addTxnToDB = (txn: Transaction) => {
     const db_txn = db.beginTxn()
     try {
-        const stringified_txn = JSON.stringify({
+        const stringified_txn = Buffer.from(ITxn.encode({
             hash: txn.hash,
             sender: txn.from,
-            receiver: txn.to,
+            receiver: txn.to ? txn.to : undefined,
             amount: txn.value,
             gas: txn.gasPrice,
-            block: txn.blockNumber,
-            blockHash: txn.blockHash,
+            block: txn.blockNumber ? txn.blockNumber : undefined,
+            blockHash: txn.blockHash ? txn.blockHash : undefined,
             note: txn.input
-        })
-        db_txn.putString(txn_db, txn.hash, stringified_txn)
+        }).finish())
+        db_txn.putBinary(txn_db, txn.hash, stringified_txn)
         console.log(`Txn Added: ${txn.hash}`)
         db_txn.commit()
     } catch (err) {

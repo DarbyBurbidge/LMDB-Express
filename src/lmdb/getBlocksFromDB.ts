@@ -1,12 +1,12 @@
 import { block_db, db } from "../db"
-import { IBlock } from "../schema/Block.schema"
+import { IBlock } from "../models/src/proto/Block"
 
 export const getBlocksFromDB = (startBlock: number, endBlock: number): IBlock[] => {
     const blocks: IBlock[] = []
     const db_txn = db.beginTxn()
     try {
         for (let i = startBlock; i <= endBlock; i++) {
-            blocks.push(JSON.parse(db_txn.getString(block_db, i.toString())))
+            blocks.push(IBlock.decode(db_txn.getBinary(block_db, i.toString())))
         }
         db_txn.commit()
         return blocks.flatMap((block) => {return block ? [block] : []})

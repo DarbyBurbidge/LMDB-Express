@@ -4,7 +4,7 @@ import { db } from "../db"
 export const checkKey = (key: string, dbi: Dbi): boolean => {
     const db_txn = db.beginTxn()
     try {
-        const result = db_txn.getString(dbi, key)
+        const result = db_txn.getBinary(dbi, key)
         db_txn.commit()
         return result ? true : false
     } catch (err) {

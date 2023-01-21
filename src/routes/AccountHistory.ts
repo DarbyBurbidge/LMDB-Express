@@ -1,8 +1,10 @@
 import { Request, Response } from "express"
 import { eth } from "../eth"
 import { BlockTransactionObject } from "web3-eth"
-import { addBlockToDB } from "../lmdb/addBlockToDB"
 import { getBlocksFromDB } from "../lmdb/getBlocksFromDB"
+import { getTxnFromDB } from "../lmdb/getTxnFromDB"
+import { IBlock } from "../models/src/proto/Block"
+import { addBlocksToDB } from "../lmdb/addBlocksToDB"
 
 export const getAccountHistory = async (req: Request, res: Response) => {
     const { startBlock, endBlock } = req.query
@@ -26,14 +28,23 @@ export const getAccountHistory = async (req: Request, res: Response) => {
             await fetchHistoryAndStore(blockRange[blockRange.length - 1].number + 1, endBlockNum)
         }
     }
-    res.send(getBlocksFromDB(startBlockNum, endBlockNum).map((block) => { return block.number }))
+    res.send(getBlocksFromDB(startBlockNum, endBlockNum).map((block: IBlock) => {
+        return {
+            hash: block.hash,
+            number: block.number,
+            createdAt: block.createdAt,
+            miner: block.miner,
+            gasUsed: block.gasUsed,
+            gasLimit: block.gasLimit,
+            data: block.data,
+            txns: block.txns.map((txn => { return getTxnFromDB(txn)}))
+        }
+    }))
 }
 
 const fetchHistoryAndStore = async (startBlock: number, endBlock: number) => {
     const blocks = await scanBlockRange(startBlock, endBlock, 200)
-        blocks.forEach((block: BlockTransactionObject) => {
-            addBlockToDB(block)
-    })
+    addBlocksToDB(blocks)
     return blocks
 }
 // Most of the design for the next section comes from:

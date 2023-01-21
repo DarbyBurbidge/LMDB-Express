@@ -1,10 +1,10 @@
 import { block_db, db } from "../db"
-import { IBlock } from "../schema/Block.schema"
+import { IBlock } from "../models/src/proto/Block"
 
 export const getBlockFromDB = (blockNum: string): IBlock | {} => {
     const db_txn = db.beginTxn()
     try {
-        const block: IBlock = JSON.parse(db_txn.getString(block_db, blockNum))
+        const block: IBlock = IBlock.decode(db_txn.getBinary(block_db, blockNum))
         db_txn.commit()
         return block
     } catch (err) {
