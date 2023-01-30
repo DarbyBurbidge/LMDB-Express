@@ -10,41 +10,46 @@ export const getAccountHistory = async (req: Request, res: Response) => {
     const { startBlock, endBlock } = req.query
     const endBlockNum = endBlock ? Number(endBlock) : await eth.getBlockNumber()
     const startBlockNum = startBlock ? Number(startBlock) : endBlockNum - 1000
+    let blocks: BlockTransactionObject[] = []
 
-    const blockRange = getBlocksFromDB(startBlockNum, endBlockNum)
+    const blockRange = await getBlocksFromDB(startBlockNum, endBlockNum)
     if (blockRange.length < endBlockNum - startBlockNum) {
         // If the blocks fetched is shorter than the difference
         // Blocks are missing
-        await fetchHistoryAndStore(startBlockNum, endBlockNum)
+        blocks = await fetchHistory(startBlockNum, endBlockNum)
     } else {
         if (blockRange && blockRange[0].number > startBlockNum) {
             console.log("low range")
             // Fetch low range -1 so we don't refetch the first block
-            await fetchHistoryAndStore(startBlockNum, blockRange[0].number - 1)
+            blocks = await fetchHistory(startBlockNum, blockRange[0].number - 1)
         }
         if (blockRange && blockRange[blockRange?.length - 1].number < endBlockNum) {
             console.log("high range")
             // Fetch high range + 1 so we don't refetch the last block
-            await fetchHistoryAndStore(blockRange[blockRange.length - 1].number + 1, endBlockNum)
+            blocks = await fetchHistory(blockRange[blockRange.length - 1].number + 1, endBlockNum)
         }
     }
-    res.send(getBlocksFromDB(startBlockNum, endBlockNum).map((block: IBlock) => {
-        return {
-            hash: block.hash,
-            number: block.number,
-            createdAt: block.createdAt,
-            miner: block.miner,
-            gasUsed: block.gasUsed,
-            gasLimit: block.gasLimit,
-            data: block.data,
-            txns: block.txns.map((txn => { return getTxnFromDB(txn)}))
-        }
-    }))
+    addBlocksToDB(blocks).then(async () => {
+        res.send((await getBlocksFromDB(startBlockNum, endBlockNum)).map((block: IBlock) => {
+            return {
+                hash: block.hash,
+                number: block.number,
+                createdAt: block.createdAt,
+                miner: block.miner,
+                gasUsed: block.gasUsed,
+                gasLimit: block.gasLimit,
+                data: block.data,
+                txns: block.txns.map((txn => { return getTxnFromDB(txn)}))
+            }
+        }))
+    })
 }
 
-const fetchHistoryAndStore = async (startBlock: number, endBlock: number) => {
+const fetchHistory = async (startBlock: number, endBlock: number) => {
+    const start = new Date().getTime()
+    console.log("fetching blocks", "0")
     const blocks = await scanBlockRange(startBlock, endBlock, 200)
-    addBlocksToDB(blocks)
+    console.log("done", new Date().getTime() - start)
     return blocks
 }
 // Most of the design for the next section comes from:
@@ -75,8 +80,7 @@ const scanBlockRange = async (start: number, end: number, maxThreads: number, ca
         if (blockNumber > end) {
             exitThread();
         }
-        // Scan the next block and assign a callback to scan even more
-        // once that is done.
+
         var myBlockNumber = blockNumber++;
         // Write periodic status update so we can tell something is happening
         if (myBlockNumber % maxThreads == 0 || myBlockNumber == end) {

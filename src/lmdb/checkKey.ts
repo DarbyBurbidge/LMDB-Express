@@ -1,15 +1,6 @@
-import { Dbi } from "node-lmdb"
-import { db } from "../db"
+import { Database } from "lmdb"
 
-export const checkKey = (key: string, dbi: Dbi): boolean => {
-    const db_txn = db.beginTxn()
-    try {
-        const result = db_txn.getBinary(dbi, key)
-        db_txn.commit()
-        return result ? true : false
-    } catch (err) {
-        console.error(err)
-        db_txn.abort()
-        return false
-    }
+export const checkKey = (key: string, db: Database): boolean => {
+    const result = db.get(key)
+    return result ? true : false
 }

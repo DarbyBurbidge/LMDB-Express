@@ -14,7 +14,7 @@ export const getBlock = async (req: Request, res: Response) => {
     if (!checkKey(blockNum, block_db)) {
         // Gets a block from sepolia testnet
         const block = await eth.getBlock(blockNum, true);
-        addBlockToDB(block)
+        await addBlockToDB(block)
     }
     // Returns the transactions from the database to the front end
     res.send(getBlockFromDB(blockNum))
