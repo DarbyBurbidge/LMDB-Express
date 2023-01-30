@@ -3,7 +3,7 @@ import { eth } from "../eth"
 import { BlockTransactionObject } from "web3-eth"
 import { getBlocksFromDB } from "../lmdb/getBlocksFromDB"
 import { getTxnFromDB } from "../lmdb/getTxnFromDB"
-import { IBlock } from "../models/src/proto/Block"
+import { IBlock } from "../models/Block"
 import { addBlocksToDB } from "../lmdb/addBlocksToDB"
 
 export const getAccountHistory = async (req: Request, res: Response) => {

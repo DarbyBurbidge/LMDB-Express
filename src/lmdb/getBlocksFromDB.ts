@@ -1,5 +1,5 @@
 import { block_db } from "../db"
-import { IBlock } from "../models/src/proto/Block"
+import { IBlock } from "../models/Block"
 
 export const getBlocksFromDB = async (startBlock: number, endBlock: number): Promise<IBlock[]> => {
     const blocks: IBlock[] = []

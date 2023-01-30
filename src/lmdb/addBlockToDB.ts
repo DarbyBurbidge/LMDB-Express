@@ -1,7 +1,7 @@
 import { BlockTransactionObject, Transaction } from "web3-eth";
 import { block_db } from "../db";
 import { addTxnToDB } from "./addTxnToDB";
-import { IBlock } from "../models/src/proto/Block";
+import { IBlock } from "../models/Block";
 
 export const addBlockToDB = async (block: BlockTransactionObject) => {
     block.transactions.forEach(async (txn: Transaction) => {

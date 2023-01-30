@@ -1,6 +1,6 @@
 import { Transaction } from "web3-eth";
 import { txn_db } from "../db";
-import { ITxn } from "../models/src/proto/Txn";
+import { ITxn } from "../models/Txn";
 
 export const addTxnToDB = async (txn: Transaction) => {
     const stringified_txn: ITxn = {
